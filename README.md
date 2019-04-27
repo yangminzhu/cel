@@ -1,6 +1,6 @@
 # cel
 
-A command-line tool to evaluate CEL expression and also print the parsed AST.
+A command-line tool to evaluate Common Expression Language [(CEL)](https://github.com/google/cel-spec) expression and also print the parsed AST.
 
 ## Example
 
