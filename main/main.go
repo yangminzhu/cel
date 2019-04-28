@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"github.com/davecgh/go-spew/spew"
 	"github.com/yangminzhu/cel/attributes"
 	"github.com/yangminzhu/cel/util"
 	"log"
@@ -11,13 +12,14 @@ import (
 )
 
 var (
-	printAST            bool
-	useSampleAttributes bool
+	printAST bool
+	spewCfg = spew.NewDefaultConfig()
 )
 
 func init() {
-	flag.BoolVar(&printAST, "ast", false, "also print AST in YAML")
-	flag.BoolVar(&useSampleAttributes, "sample", true, "use sample attributes")
+	flag.BoolVar(&printAST, "ast", false, "print parsed AST in YAML, skip evaluation")
+	spewCfg.SortKeys = true
+	spewCfg.DisableCapacities = true
 }
 
 func main() {
@@ -28,10 +30,7 @@ func main() {
 		log.Fatalln("CEL expressions must not be empty")
 	}
 
-	celenv, err := celgo.NewEnv()
-	if useSampleAttributes {
-		celenv, err = celgo.NewEnv(attributes.EnvOpt())
-	}
+	celenv, err := celgo.NewEnv(attributes.EnvOpt())
 	if err != nil {
 		log.Fatalf("cel environment creation error: %s\n", err)
 	}
@@ -45,36 +44,35 @@ func main() {
 		log.Printf("AST check issues:\n%s\n", iss)
 	}
 	if ast == nil {
-		log.Printf("using sample attributes: %s\n", attributes.Sample)
 		return
 	}
 	if printAST {
-		log.Printf("generating AST for %s\n", expression)
 		yml, err := util.ToYAML(ast.Expr())
 		if err != nil {
 			log.Fatalf("converting AST to yaml error: %v", err)
 		} else {
 			fmt.Printf("%s\n\n", yml)
 		}
+		return
 	}
 
 	prg, err := celenv.Program(ast)
 	if err != nil {
 		log.Fatalf("generating program error: %s", err)
 	}
-
-	var attr map[string]interface{}
-	if useSampleAttributes {
-		attr = attributes.Sample
-		log.Printf("using sample attributes: %s\n", attributes.Sample)
+	yml, err := util.ToYAML(&attributes.Example)
+	if err != nil {
+		log.Printf("converting Example attributes to yaml error: %v", err)
 	}
-	log.Printf("evaluated expression: %s", expression)
-	val, detail, err := prg.Eval(attr)
+	log.Printf("using attributes:\n%s\n", yml)
+	val, detail, err := prg.Eval(attributes.MyActivation())
 	if detail != nil {
 		log.Printf("details: %v", detail)
 	}
 	if err != nil {
 		log.Fatalf("evaluation error: %s", err)
+	} else {
+		log.Printf("evaluated successfully: %v (%s)", val.Value(), val.Type())
 	}
 	fmt.Println(val.Value())
 }
