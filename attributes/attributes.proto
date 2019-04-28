@@ -1,0 +1,12 @@
+syntax = "proto3";
+
+package attributes;
+
+message AttributesContext {
+    map<string, string> headers = 1;
+    string sni = 2;
+    uint32 port = 3;
+    bool tls = 4;
+    repeated string clusters = 5;
+    repeated int32 weighet = 6;
+}
