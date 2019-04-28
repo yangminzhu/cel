@@ -1,133 +1,125 @@
-# cel
+# CEL playground
 
-A command-line tool to evaluate Common Expression Language [(CEL)](https://github.com/google/cel-spec) expression and also print the parsed AST.
+A command-line help tool for Common Expression Language [(CEL)](https://github.com/google/cel-spec).
 
-## Example
+## Examples
 
-```bash
-$ go run main/main.go -ast  'a<=b && c==true && (d.contains("bye") || e[0]+e[1]>=e[2]) && ("f2" in f) && g["g2"].startsWith("g")' 
-2019/04/27 01:20:48 generating AST for a<=b && c==true && (d.contains("bye") || e[0]+e[1]>=e[2]) && ("f2" in f) && g["g2"].startsWith("g")
-callExpr:
-  args:
-  - callExpr:
+1. Evaluate a CEL expression using built-in sample attributes context
+    ```bash
+    $ make build && `make output` 'headers[":path"].startsWith("/info") && headers[":method"] in ["GET", "HEAD"] && (("x-id" in headers) ? (headers["x-id"]=="123456") : false)'
+    protoc --go_out=. attributes/*.proto
+    go build -o /home/ymzhu/go/out/yangminzhu/cel ./main
+    2019/04/28 00:08:44 using attributes:
+    clusters:
+    - cluster-1
+    - cluster-2
+    - cluster-3
+    headers:
+      :host: httpbin
+      :method: GET
+      :path: /info/v1
+      authorization: bearer 123456
+      x-id: "123456"
+    port: 8080
+    sni: www.httpbin.com
+    tls: true
+    weighet:
+    - 10
+    - 20
+    - 30
+    - 40
+    
+    2019/04/28 00:08:44 evaluated successfully: true (bool)
+    true
+    ```
+
+1. Parse a CEL expression and generate the AST
+    ```
+    $ make build && `make output` -ast 'headers[":path"].startsWith("/info") && headers[":method"] in ["GET", "HEAD"] && (("x-id" in headers) ? (headers["x-id"]=="123456") : false)'
+    
+    protoc --go_out=. attributes/*.proto
+    go build -o /home/ymzhu/go/out/yangminzhu/cel ./main
+    callExpr:
       args:
       - callExpr:
           args:
           - callExpr:
               args:
-              - id: "1"
-                identExpr:
-                  name: a
-              - id: "3"
-                identExpr:
-                  name: b
-              function: _<=_
-            id: "2"
-          - callExpr:
-              args:
-              - id: "4"
-                identExpr:
-                  name: c
               - constExpr:
-                  boolValue: true
-                id: "6"
-              function: _==_
-            id: "5"
-          function: _&&_
-        id: "7"
-      - callExpr:
-          args:
-          - callExpr:
-              args:
-              - constExpr:
-                  stringValue: bye
-                id: "10"
-              function: contains
+                  stringValue: /info
+                id: "5"
+              function: startsWith
               target:
-                id: "8"
-                identExpr:
-                  name: d
-            id: "9"
+                callExpr:
+                  args:
+                  - id: "1"
+                    identExpr:
+                      name: headers
+                  - constExpr:
+                      stringValue: :path
+                    id: "3"
+                  function: _[_]
+                id: "2"
+            id: "4"
           - callExpr:
               args:
               - callExpr:
                   args:
-                  - callExpr:
-                      args:
-                      - id: "11"
-                        identExpr:
-                          name: e
-                      - constExpr:
-                          int64Value: "0"
-                        id: "13"
-                      function: _[_]
+                  - id: "6"
+                    identExpr:
+                      name: headers
+                  - constExpr:
+                      stringValue: :method
+                    id: "8"
+                  function: _[_]
+                id: "7"
+              - id: "10"
+                listExpr:
+                  elements:
+                  - constExpr:
+                      stringValue: GET
+                    id: "11"
+                  - constExpr:
+                      stringValue: HEAD
                     id: "12"
-                  - callExpr:
-                      args:
-                      - id: "15"
-                        identExpr:
-                          name: e
-                      - constExpr:
-                          int64Value: "1"
-                        id: "17"
-                      function: _[_]
-                    id: "16"
-                  function: _+_
+              function: '@in'
+            id: "9"
+          function: _&&_
+        id: "13"
+      - callExpr:
+          args:
+          - callExpr:
+              args:
+              - constExpr:
+                  stringValue: x-id
                 id: "14"
+              - id: "16"
+                identExpr:
+                  name: headers
+              function: '@in'
+            id: "15"
+          - callExpr:
+              args:
               - callExpr:
                   args:
-                  - id: "19"
+                  - id: "18"
                     identExpr:
-                      name: e
+                      name: headers
                   - constExpr:
-                      int64Value: "2"
-                    id: "21"
+                      stringValue: x-id
+                    id: "20"
                   function: _[_]
-                id: "20"
-              function: _>=_
-            id: "18"
-          function: _||_
-        id: "22"
-      function: _&&_
-    id: "23"
-  - callExpr:
-      args:
-      - callExpr:
-          args:
-          - constExpr:
-              stringValue: f2
-            id: "24"
-          - id: "26"
-            identExpr:
-              name: f
-          function: '@in'
-        id: "25"
-      - callExpr:
-          args:
-          - constExpr:
-              stringValue: g
-            id: "32"
-          function: startsWith
-          target:
-            callExpr:
-              args:
-              - id: "28"
-                identExpr:
-                  name: g
+                id: "19"
               - constExpr:
-                  stringValue: g2
-                id: "30"
-              function: _[_]
-            id: "29"
-        id: "31"
+                  stringValue: "123456"
+                id: "22"
+              function: _==_
+            id: "21"
+          - constExpr:
+              boolValue: false
+            id: "23"
+          function: _?_:_
+        id: "17"
       function: _&&_
-    id: "33"
-  function: _&&_
-id: "27"
-
-
-2019/04/27 01:20:48 using sample attributes: map[a:10 b:20 c:true d:hello e:[11 22 33] f:[f1 f2] g:map[g1:g11 g2:g22]]
-
-2019/04/27 01:20:48 evaluated expression: a<=b && c==true && (d.contains("bye") || e[0]+e[1]>=e[2]) && ("f2" in f) && g["g2"].startsWith("g")
-true
-```
+    id: "24"
+    ```
