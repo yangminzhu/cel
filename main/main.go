@@ -15,12 +15,14 @@ import (
 var (
 	printAST  bool
 	printText bool
+	skipCheck bool
 	spewCfg                 = spew.NewDefaultConfig()
 )
 
 func init() {
 	flag.BoolVar(&printAST, "ast", false, "print parsed AST in YAML, skip evaluation")
 	flag.BoolVar(&printText, "text", false, "print parsed AST in JSON, skip evaluation")
+	flag.BoolVar(&skipCheck, "skip-check", false, "skip checking AST")
 	spewCfg.SortKeys = true
 	spewCfg.DisableCapacities = true
 }
@@ -31,13 +33,15 @@ func getProgram(expression string) celgo.Program {
 		log.Fatalf("cel environment creation error: %s\n", err)
 	}
 
-	a, iss := celenv.Parse(expression)
+	ast, iss := celenv.Parse(expression)
 	if iss != nil {
 		log.Printf("AST parse issues:\n%s\n", iss)
 	}
-	ast, iss := celenv.Check(a)
-	if iss != nil {
-		log.Printf("AST check issues:\n%s\n", iss)
+	if !skipCheck {
+		ast, iss = celenv.Check(ast)
+		if iss != nil {
+			log.Printf("AST check issues:\n%s\n", iss)
+		}
 	}
 	if ast == nil {
 		return nil
