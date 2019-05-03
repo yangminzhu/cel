@@ -15,17 +15,20 @@ var (
 
 	Example = AttributesContext{
 		Headers: map[string]string{
-			":path": "/info/v1",
+			"path": "/admin/edit",
 			":host": "httpbin",
 			"x-id": "123456",
 			":method": "GET",
 			"authorization": "bearer 123456",
+			"ip": "10.0.1.2",
+			"token": "admin",
 		},
 		Tls: true,
 		Sni: "www.httpbin.com",
 		Port: 8080,
-		Clusters: []string{"cluster-1", "cluster-2", "cluster-3"},
 		Weighet: []int32{10, 20, 30, 40},
+		Whitelist: []string{"10.0.1.1", "10.0.1.2", "10.0.1.3"},
+		Blacklist: []string{"10.0.1.5", "10.0.1.6", "10.0.1.6"},
 	}
 )
 
@@ -37,11 +40,15 @@ func MyActivation() interpreter.Activation {
 	}
 	// TODO: Use reflection.
 	m := map[string]interface{}{
-		"headers":  h,
-		"tls":      Example.GetTls(),
-		"port":     Example.GetPort(),
-		"clusters": Example.GetClusters(),
-		"weight":   Example.GetWeighet(),
+		"headers.path": h["path"],
+		"headers.ip": h["ip"],
+		"headers.token": h["token"],
+		"headers":   h,
+		"tls":       Example.GetTls(),
+		"port":      Example.GetPort(),
+		"weight":    Example.GetWeighet(),
+		"whitelist": Example.GetWhitelist(),
+		"blacklist": Example.GetBlacklist(),
 	}
 	a, err := interpreter.NewActivation(m)
 	if err != nil {
@@ -54,11 +61,15 @@ func EnvOpt() celgo.EnvOption {
 	var ret []*exprpb.Decl
 	// TODO: Use reflection.
 	ret = append(ret, decls.NewIdent("headers", stringMapType, nil))
+	ret = append(ret, decls.NewIdent("headers.path", decls.String, nil))
+	ret = append(ret, decls.NewIdent("headers.ip", decls.String, nil))
+	ret = append(ret, decls.NewIdent("headers.token", decls.String, nil))
 	ret = append(ret, decls.NewIdent("tls", decls.Bool, nil))
 	ret = append(ret, decls.NewIdent("sni", decls.String, nil))
 	ret = append(ret, decls.NewIdent("port", decls.Uint, nil))
-	ret = append(ret, decls.NewIdent("clusters", stringListType, nil))
 	ret = append(ret, decls.NewIdent("weight", intListType, nil))
+	ret = append(ret, decls.NewIdent("whitelist", stringListType, nil))
+	ret = append(ret, decls.NewIdent("blacklist", stringListType, nil))
 
 	//for k, v := range Example {
 	//	var t *exprpb.Type

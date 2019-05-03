@@ -6,7 +6,7 @@ A command-line help tool for Common Expression Language [(CEL)](https://github.c
 
 1. Evaluate a CEL expression using built-in sample attributes context
     ```bash
-    $ make build && `make output` 'headers[":path"].startsWith("/info") && headers[":method"] in ["GET", "HEAD"] && (("x-id" in headers) ? (headers["x-id"]=="123456") : false)'
+    $ make build && `make out` 'headers[":path"].startsWith("/info") && headers[":method"] in ["GET", "HEAD"] && (("x-id" in headers) ? (headers["x-id"]=="123456") : false)'
     protoc --go_out=. attributes/*.proto
     go build -o /home/ymzhu/go/out/yangminzhu/cel ./main
     2019/04/28 00:08:44 using attributes:

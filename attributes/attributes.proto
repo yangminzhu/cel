@@ -7,6 +7,7 @@ message AttributesContext {
     string sni = 2;
     uint32 port = 3;
     bool tls = 4;
-    repeated string clusters = 5;
-    repeated int32 weighet = 6;
+    repeated int32 weighet = 5;
+    repeated string whitelist = 6;
+    repeated string blacklist = 7;
 }
